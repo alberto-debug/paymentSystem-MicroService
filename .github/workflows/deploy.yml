@@ -1,0 +1,21 @@
+name: Payflow Deploy
+
+on:
+  push:
+    branches:
+      - main
+      - chore/docker-setup
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy with Docker Compose
+        run: |
+          cd infrastructure/docker
+          docker compose down
+          docker compose up -d --build
