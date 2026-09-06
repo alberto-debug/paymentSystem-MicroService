@@ -66,8 +66,4 @@ public class User {
 
     private LocalDateTime lastLogin;
 
-
-
-
-
 }
