@@ -13,6 +13,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
     depends_on:
       - payflow-db
+      - keycloak
     networks:
       - payflow-network
 
@@ -30,8 +31,22 @@ services:
     networks:
       - payflow-network
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.1
+    container_name: keycloak
+    environment:
+      - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN_USER}
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
+      - KC_DB=dev-mem
+    command: start-dev
+    ports:
+      - "8081:8080"
+    networks:
+      - payflow-network
+
 volumes:
   postgres-data:
+  keycloak-data:
 
 networks:
   payflow-network:
