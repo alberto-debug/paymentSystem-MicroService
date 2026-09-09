@@ -1,0 +1,15 @@
+{
+  "realm": "payflow",
+  "enabled": true,
+  "clients": [
+    {
+      "clientId": "multidigital-wallet-client",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "E1bdIx6iyWOLANmD6l6X96Ql5mFQiNWc",
+      "serviceAccountsEnabled": true,
+      "publicClient": false,
+      "protocol": "openid-connect"
+    }
+  ]
+}

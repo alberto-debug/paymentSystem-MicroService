@@ -27,10 +27,10 @@ public class User {
     private UUID id;
 
     @Column(nullable = false, unique = true)
-    private String email;
+    private String keycloakId;
 
-    @Column(nullable = false)
-    private String password;
+    @Column(nullable = false, unique = true)
+    private String email;
 
     @Column(nullable = false, length = 150)
     private String fullName;
@@ -41,20 +41,9 @@ public class User {
     @Column(nullable = false)
     private LocalDate birthDate;
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-            name = "users_roles",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id")
-    )
-    private Set<Role> roles = new HashSet<>();
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserStatus userStatus;
-
-    @Column(nullable = false)
-    private boolean twoFactorEnabled = false;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
