@@ -45,7 +45,7 @@ public class KeycloakService {
         String firstName = fullName;
         String lastName = "";
 
-        if (fullName != null & fullName.trim().contains(" ")){
+        if (fullName != null && fullName.trim().contains(" ")){
             int firstSpaceIndex= fullName.trim().indexOf(" ");
             firstName = fullName.substring(0, firstSpaceIndex).trim();
             lastName = fullName.substring(firstSpaceIndex).trim();
@@ -73,5 +73,21 @@ public class KeycloakService {
 
         }
 
+    }
+
+    /**
+     * Remove o usuário no Keycloak (compensação SAGA em caso de falha no banco local).
+     *
+     * @param keycloakId identificador único do usuário no Keycloak
+     */
+
+    public void deleteUser(String keycloakId){
+
+        try {
+            keycloak.realm(realm).users().get(keycloakId).remove();
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao compensar/deletar usuário no Keycloak: " + e.getMessage(), e);
+
+        }
     }
 }
