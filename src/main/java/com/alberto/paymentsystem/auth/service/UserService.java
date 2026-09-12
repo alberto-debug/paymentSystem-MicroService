@@ -5,34 +5,33 @@ import com.alberto.paymentsystem.auth.DTO.UserResponse;
 import com.alberto.paymentsystem.auth.model.User;
 import com.alberto.paymentsystem.auth.model.UserStatus;
 import com.alberto.paymentsystem.auth.model.Wallet;
-import com.alberto.paymentsystem.auth.repository.userRepository;
-import com.alberto.paymentsystem.auth.repository.walletRepository;
+import com.alberto.paymentsystem.auth.repository.UserRepository;
+import com.alberto.paymentsystem.auth.repository.WalletRepository;
+import com.alberto.paymentsystem.core.exception.ResourceConflictException;
+import com.alberto.paymentsystem.core.exception.ResourceNotFoundException;
 import com.alberto.paymentsystem.infra.KeycloakService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
-    private final userRepository userRepository;
+    private final UserRepository userRepository;
+    private final WalletRepository walletRepository;
     private final KeycloakService keycloakService;
-    private final walletRepository walletRepository;
+    private final TransactionTemplate transactionTemplate;
 
-
-    @Transactional
-    public UserResponse register(RegisterUserRequest request){
-
-        // 1. Validação prévia de duplicidade no banco local
-        if (userRepository.existsByEmail(request.email())){
-            throw new IllegalArgumentException("E-mail já cadastrado no sistema: " + request.email());
+    public UserResponse register(RegisterUserRequest request) {
+        if (userRepository.existsByEmail(request.email())) {
+            throw new ResourceConflictException("E-mail já cadastrado: " + request.email());
         }
 
-        if (userRepository.existsByDocumentNumber(request.documentNumber())){
-            throw new IllegalArgumentException("Documento já cadastrado no sistema: " + request.documentNumber());
+        if (userRepository.existsByDocumentNumber(request.documentNumber())) {
+            throw new ResourceConflictException("Documento já cadastrado: " + request.documentNumber());
         }
 
         String keycloakId = null;
@@ -45,18 +44,20 @@ public class UserService {
                     request.password()
             );
 
-            User user = new User();
-            user.setKeycloakId(keycloakId);
-            user.setEmail(request.email());
-            user.setFullName(request.fullName());
-            user.setDocumentNumber(request.documentNumber());
-            user.setBirthDate(request.birthDate());
-            user.setUserStatus(UserStatus.ACTIVE);
+            final String finalKeycloakId = keycloakId;
+            User savedUser = transactionTemplate.execute(status -> {
+                User user = new User();
+                user.setKeycloakId(finalKeycloakId);
+                user.setEmail(request.email());
+                user.setFullName(request.fullName());
+                user.setDocumentNumber(request.documentNumber());
+                user.setBirthDate(request.birthDate());
+                user.setUserStatus(UserStatus.ACTIVE);
 
-            User savedUser = userRepository.save(user);
-
-            Wallet wallet = new Wallet(savedUser);
-            walletRepository.save(wallet);
+                User persisted = userRepository.save(user);
+                walletRepository.save(new Wallet(persisted));
+                return persisted;
+            });
 
             return new UserResponse(
                     savedUser.getId(),
@@ -67,17 +68,15 @@ public class UserService {
                     savedUser.getCreateAt()
             );
         } catch (Exception ex) {
-            // 5. Compensação SAGA: Se falhar após criar no Keycloak, desfaz no Keycloak
             if (keycloakId != null) {
-                log.warn("Falha na persistência local. Disparando rollback SAGA no Keycloak para ID: {}", keycloakId);
+                log.warn("Rollback no Keycloak acionado devido a falha na persistência local para ID: {}", keycloakId);
                 try {
                     keycloakService.deleteUser(keycloakId);
                 } catch (Exception sagaEx) {
-                    log.error("Erro crítico na compensação SAGA ao deletar usuário {}: {}", keycloakId, sagaEx.getMessage(), sagaEx);
+                    log.error("Falha crítica ao compensar usuário no Keycloak [ID: {}]", keycloakId, sagaEx);
                 }
             }
             throw ex;
         }
-
     }
 }
