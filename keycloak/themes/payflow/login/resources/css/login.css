@@ -1,0 +1,305 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: #FFFFFF !important;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  color: #0F172A !important;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ==========================================================================
+   Header / Navbar Institucional Padronizada (h-14 / 56px, border-slate-300)
+   ========================================================================== */
+.app-header {
+  height: 56px;
+  background-color: #FFFFFF;
+  border-bottom: 1px solid #CBD5E1;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .app-header {
+    padding: 0 48px;
+  }
+}
+
+.app-brand {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0F172A;
+  letter-spacing: -0.025em;
+}
+
+.app-brand span {
+  color: #2563EB;
+}
+
+.nav-cta-btn {
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  border: 1px solid #CBD5E1;
+  background-color: #FFFFFF;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+}
+
+.nav-cta-btn:hover {
+  background-color: #F8FAFC;
+  color: #020617;
+  border-color: #94A3B8;
+}
+
+.cta-arrow {
+  color: currentColor;
+}
+
+/* ==========================================================================
+   Main / Container Central
+   ========================================================================== */
+.app-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  width: 100%;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 440px;
+  background: #FFFFFF;
+  padding: 24px;
+}
+
+@media (min-width: 640px) {
+  .login-card {
+    padding: 32px;
+  }
+}
+
+.card-header-block {
+  margin-bottom: 28px;
+}
+
+.card-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #0F172A;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+}
+
+.card-subtitle {
+  font-size: 13px;
+  color: #64748B;
+  margin-top: 4px;
+}
+
+/* ==========================================================================
+   Formulário & Campos de Entrada (Estilo Exato do RegisterPage)
+   ========================================================================== */
+.form-field-group {
+  margin-bottom: 16px;
+}
+
+.field-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 6px;
+}
+
+.password-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.password-label-row .field-label {
+  margin-bottom: 0;
+}
+
+.forgot-link {
+  font-size: 11px;
+  color: #2563EB;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.forgot-link:hover {
+  text-decoration: underline;
+}
+
+.input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.input-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94A3B8;
+  pointer-events: none;
+}
+
+.custom-input {
+  width: 100%;
+  padding: 10px 14px 10px 40px;
+  background-color: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 12px;
+  font-size: 12px;
+  color: #0F172A;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.custom-input::placeholder {
+  color: #94A3B8;
+}
+
+.custom-input:focus {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* Remember Me */
+.remember-row {
+  margin-top: 4px;
+  margin-bottom: 18px;
+}
+
+.remember-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #475569;
+  cursor: pointer;
+}
+
+.remember-label input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  accent-color: #2563EB;
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   Botão de Submissão Primário (#2563EB)
+   ========================================================================== */
+.submit-block {
+  margin-top: 8px;
+}
+
+.btn-submit {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(to right, #2563EB, #1D4ED8);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+  transition: all 0.2s ease;
+}
+
+.btn-submit:hover {
+  background: linear-gradient(to right, #1D4ED8, #1E40AF);
+  box-shadow: 0 6px 10px -1px rgba(37, 99, 235, 0.3);
+}
+
+.btn-submit:active {
+  transform: scale(0.99);
+}
+
+/* ==========================================================================
+   Alerta de Mensagens de Erro
+   ========================================================================== */
+.alert {
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.alert-error, .alert-danger {
+  background-color: #FEF2F2;
+  border: 1px solid #FECACA;
+  color: #B91C1C;
+}
+
+.alert-icon {
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   Footer do Card (Link de Cadastro)
+   ========================================================================== */
+.card-register-footer {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 12px;
+  color: #64748B;
+}
+
+.card-register-footer a {
+  color: #2563EB;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.card-register-footer a:hover {
+  text-decoration: underline;
+}
+
+/* ==========================================================================
+   Footer Institucional Padronizado
+   ========================================================================== */
+.app-footer {
+  padding: 24px 16px;
+  text-align: center;
+  font-size: 12px;
+  color: #94A3B8;
+  border-top: 1px solid rgba(226, 232, 240, 0.6);
+  background-color: #FFFFFF;
+  width: 100%;
+}

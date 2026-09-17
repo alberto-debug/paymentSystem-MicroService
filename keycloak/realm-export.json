@@ -3,7 +3,7 @@
   "enabled": true,
   "clients": [
     {
-      "clientId": "multidigital-wallet-client",
+      "clientId": "payflow-backend",
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
       "secret": "E1bdIx6iyWOLANmD6l6X96Ql5mFQiNWc",

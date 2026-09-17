@@ -35,4 +35,9 @@ public class AuthController {
 
     }
 
+    @org.springframework.web.bind.annotation.GetMapping("/login")
+    public org.springframework.web.servlet.view.RedirectView login() {
+        return new org.springframework.web.servlet.view.RedirectView("/oauth2/authorization/keycloak");
+    }
+
 }

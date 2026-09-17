@@ -3,6 +3,7 @@ package com.alberto.paymentsystem.core.exception;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -59,6 +60,11 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    public ResponseEntity<Void> handleNoResourceFound(org.springframework.web.servlet.resource.NoResourceFoundException ex) {
+        return ResponseEntity.notFound().build();
+    }
+
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGenericException(Exception ex){
         log.error("Erro interno não tratado no servidor", ex);
@@ -70,7 +76,6 @@ public class GlobalExceptionHandler {
         problem.setType(URI.create("https://api.paymentsystem.com/errors/internal"));
         problem.setProperty("timestamp", Instant.now());
         return problem;
-
     }
 
 }
