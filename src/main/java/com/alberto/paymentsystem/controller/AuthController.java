@@ -40,4 +40,4 @@ public class AuthController {
         return new org.springframework.web.servlet.view.RedirectView("/oauth2/authorization/keycloak");
     }
 
-}
+} 
