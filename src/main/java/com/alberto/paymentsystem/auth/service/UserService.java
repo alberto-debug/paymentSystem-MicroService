@@ -65,7 +65,7 @@ public class UserService {
                     savedUser.getEmail(),
                     savedUser.getDocumentNumber(),
                     savedUser.getUserStatus(),
-                    savedUser.getCreateAt()
+                    savedUser.getCreatedAt()
             );
         } catch (Exception ex) {
             if (keycloakId != null) {
