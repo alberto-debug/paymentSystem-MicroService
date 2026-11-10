@@ -2,6 +2,7 @@
   "realm": "payflow",
   "enabled": true,
   "sslRequired": "NONE",
+  "loginTheme": "payflow",
   "clients": [
     {
       "clientId": "payflow-backend",
