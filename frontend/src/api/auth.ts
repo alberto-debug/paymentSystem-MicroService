@@ -1,4 +1,4 @@
-import { apiClient } from './client';
+import { apiClient, API_BASE_URL } from './client';
 import type { RegisterUserRequest, UserResponse, UserMeResponse } from '../types/auth';
 
 export const authService = {
@@ -16,10 +16,10 @@ export const authService = {
   },
 
   logout: async (): Promise<void> => {
-    window.location.href = 'http://localhost:8080/logout';
+    window.location.href = `${API_BASE_URL}/logout`;
   },
 
   redirectToLogin: (): void => {
-    window.location.href = 'http://localhost:8080/api/public/auth/login';
+    window.location.href = `${API_BASE_URL}/oauth2/authorization/keycloak`;
   },
 };

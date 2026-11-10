@@ -22,6 +22,7 @@ services:
       - PAYFLOW_API_CLIENT_ID=${PAYFLOW_API_CLIENT_ID}
       - PAYFLOW_API_CLIENT_SECRET=${PAYFLOW_API_CLIENT_SECRET}
       - JAVA_TOOL_OPTIONS=-Xmx384m
+      - FRONTEND_URL=${FRONTEND_URL:-http://54.163.41.195:3000}
     depends_on:
       - payflow-db
       - keycloak
