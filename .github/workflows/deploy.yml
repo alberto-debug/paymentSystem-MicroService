@@ -1,19 +1,87 @@
-name: Payflow Deploy
+name: Payflow CI/CD Pipeline
 
 on:
   push:
     branches:
       - main
+      - dev
 
 jobs:
-  deploy:
-    runs-on: self-hosted
+  build-and-push:
+    name: Build and Publish Docker Images
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Deploy with Docker Compose
-        run: |
-          docker compose down
-          docker compose up -d --build
+      - name: Set up Docker Buildx
+        uses: actions/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set Commit Short SHA
+        id: vars
+        run: echo "short_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Build and Push Backend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/payflow-app:${{ steps.vars.outputs.short_sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/payflow-app:v${{ github.run_number }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/payflow-app:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and Push Frontend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/payflow-frontend:${{ steps.vars.outputs.short_sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/payflow-frontend:v${{ github.run_number }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/payflow-frontend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to AWS EC2
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Copy docker-compose.yml to Server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "docker-compose.yml"
+          target: "~/app/"
+
+      - name: Update and Restart Containers on AWS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/app
+            sed -i "s|PAYFLOW_APP_IMAGE=.*|PAYFLOW_APP_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/payflow-app:v${{ github.run_number }}|g" .env
+            sed -i "s|PAYFLOW_FRONTEND_IMAGE=.*|PAYFLOW_FRONTEND_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/payflow-frontend:v${{ github.run_number }}|g" .env
+            docker compose pull
+            docker compose up -d
+            docker image prune -f
