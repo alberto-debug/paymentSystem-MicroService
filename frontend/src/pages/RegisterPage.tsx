@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  ShieldCheck, 
   ArrowRight, 
   User, 
   Mail, 
@@ -10,9 +9,7 @@ import {
   Lock, 
   AlertCircle, 
   CheckCircle2, 
-  Loader2,
-  Building2,
-  Wallet
+  Loader2
 } from 'lucide-react';
 import { authService } from '../api/auth';
 import { ApiError } from '../api/client';

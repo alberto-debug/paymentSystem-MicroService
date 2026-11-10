@@ -1,16 +1,27 @@
 services:
   payment-system-app:
+    image: ${PAYFLOW_APP_IMAGE:-payment-system-app:latest}
     build:
       context: .
       dockerfile: Dockerfile
     container_name: payment-system-app
+    restart: unless-stopped
     ports:
       - "8080:8080"
     environment:
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-default}
       - SPRING_DATASOURCE_URL=jdbc:postgresql://payflow-db:5432/${POSTGRES_DB}
       - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - REDIS_HOST=payflow-redis
+      - REDIS_PORT=6379
+      - KEYCLOAK_SERVER_URL=http://keycloak:8080
+      - KEYCLOAK_ADMIN_USER=${KEYCLOAK_ADMIN_USER}
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
+      - PAYFLOW_BFF_CLIENT_SECRET=${PAYFLOW_BFF_CLIENT_SECRET}
+      - PAYFLOW_API_CLIENT_ID=${PAYFLOW_API_CLIENT_ID}
+      - PAYFLOW_API_CLIENT_SECRET=${PAYFLOW_API_CLIENT_SECRET}
+      - JAVA_TOOL_OPTIONS=-Xmx384m
     depends_on:
       - payflow-db
       - keycloak
@@ -63,6 +74,20 @@ services:
     command: redis-server --appendonly yes
     volumes:
       - redis-data:/data
+    networks:
+      - payflow-network
+
+  frontend:
+    image: ${PAYFLOW_FRONTEND_IMAGE:-payflow-frontend:latest}
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:8080}
+    container_name: payflow-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
     networks:
       - payflow-network
 

@@ -1,0 +1,13 @@
+target/
+!.mvn/wrapper/maven-wrapper.jar
+.git/
+.gitignore
+.idea/
+*.iml
+.env
+frontend/
+services/
+infrastructure/
+README.md
+HELP.md
+
