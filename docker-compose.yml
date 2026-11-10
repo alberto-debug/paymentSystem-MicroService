@@ -16,6 +16,9 @@ services:
       - REDIS_HOST=payflow-redis
       - REDIS_PORT=6379
       - KEYCLOAK_SERVER_URL=http://keycloak:8080
+      - KEYCLOAK_JWK_SET_URI=http://keycloak:8080/realms/payflow/protocol/openid-connect/certs
+      - KEYCLOAK_TOKEN_URI=http://keycloak:8080/realms/payflow/protocol/openid-connect/token
+      - KEYCLOAK_AUTH_URI=${KEYCLOAK_AUTH_URI:-http://54.163.41.195:8081/realms/payflow/protocol/openid-connect/auth}
       - KEYCLOAK_ADMIN_USER=${KEYCLOAK_ADMIN_USER}
       - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
       - PAYFLOW_BFF_CLIENT_SECRET=${PAYFLOW_BFF_CLIENT_SECRET}
