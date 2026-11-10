@@ -1,111 +1,158 @@
-# Payflow - Payment System
+# Payflow
 
-Sistema de pagamentos digital com arquitetura moderna baseada em microsserviços/módulos, autenticação via Keycloak (OAuth2/OIDC), sessões distribuídas em Redis e frontend React (Vite + Tailwind CSS).
+Payflow is a distributed digital wallet and payment orchestration platform. The system implements user identity management via Keycloak (OAuth2 / OpenID Connect), distributed sessions using Redis, transactional persistence with PostgreSQL and Flyway, and a client-facing web application built with React and Vite.
 
 ---
 
-## 🏛️ Arquitetura dos Serviços
+## Architecture Overview
 
-| Serviço | Tecnologia | Porta Host | Finalidade |
+| Service | Technology | Port | Description |
 | :--- | :--- | :--- | :--- |
-| **frontend** | React 19 + Vite + Nginx | `3000` | Interface web do usuário |
-| **payment-system-app** | Spring Boot 4 / Java 21 | `8080` | API REST & Regras de Negócio |
-| **keycloak** | Keycloak 24 (Quarkus) | `8081` | Servidor de Identidade (IAM / OAuth2) |
-| **payflow-db** | PostgreSQL 15 | `5432` | Banco de dados relacional principal |
-| **payflow-redis** | Redis 7 | `6379` | Cache & Sessões distribuídas (Spring Session) |
+| `frontend` | React 19, Vite, Nginx | `3000` | Client web interface (SPA) |
+| `payment-system-app` | Spring Boot, Java 21 | `8080` | REST API, wallet domain logic, and BFF layer |
+| `keycloak` | Keycloak 24 (Quarkus) | `8081` | Identity and Access Management (OAuth2 / OIDC) |
+| `payflow-db` | PostgreSQL 15 | `5432` | Relational database (application data and Keycloak) |
+| `payflow-redis` | Redis 7 | `6379` | Distributed session storage and caching |
 
 ---
 
-## 💻 1. Ambiente Local de Desenvolvimento
+## Prerequisites
 
-Em desenvolvimento local, a prática recomendada é rodar **apenas a infraestrutura no Docker**, mantendo o Backend e o Frontend rodando diretamente na máquina para habilitar debug e hot-reload rápido:
+- Docker Engine 24+ and Docker Compose v2
+- Java Development Kit (JDK) 21 (for local backend development)
+- Node.js 20+ and npm (for local frontend development)
+
+---
+
+## Local Development
+
+For active development, run only the supporting infrastructure inside Docker containers while executing the backend and frontend on the host machine to enable debugging and hot reloading.
+
+### 1. Start Supporting Services
 
 ```bash
-# 1. Iniciar banco, redis e keycloak:
 docker compose up -d payflow-db keycloak payflow-redis
+```
 
-# 2. Rodar a API Spring Boot (no IntelliJ ou terminal):
+Verify service availability:
+
+```bash
+docker compose ps
+```
+
+- Keycloak Admin Console: `http://localhost:8081`
+- PostgreSQL: `localhost:5432`
+- Redis: `localhost:6379`
+
+### 2. Run the Backend API
+
+```bash
 ./mvnw spring-boot:run
+```
 
-# 3. Rodar o Frontend (em outro terminal):
+The Spring Boot application automatically executes Flyway schema migrations on startup and initializes the connection pool against the local PostgreSQL container.
+
+### 3. Run the Frontend
+
+```bash
 cd frontend
 npm install
 npm run dev
 ```
 
+The frontend development server will be accessible at `http://localhost:3000`.
+
 ---
 
-## 🚀 2. Guia de Deploy em Produção (AWS)
+## Production Deployment Workflow
 
-Sempre que você fizer alterações no código e quiser subir uma nova versão para o servidor da AWS (`54.163.41.195`), siga o roteiro abaixo.
+Production workloads run as containerized services managed by Docker Compose on an AWS EC2 instance. Application artifacts are distributed via Docker Hub images built with multi-stage Dockerfiles.
 
-### 📦 Cenário A: Você alterou o Backend (Java / Spring Boot)
+### 1. Build and Publish Images
 
-#### No seu computador (Laptop):
-1. **Gere a nova versão da imagem Docker** (suba a tag, ex: `v2`, `v3`):
-   ```bash
-   docker build --platform linux/amd64 -t albertomjunior/payflow-app:v2 .
-   ```
+#### Backend API:
 
-2. **Envie para o Docker Hub:**
-   ```bash
-   docker push albertomjunior/payflow-app:v2
-   ```
+```bash
+docker build --platform linux/amd64 -t <dockerhub-username>/payflow-app:<tag> .
+docker push <dockerhub-username>/payflow-app:<tag>
+```
 
-#### No servidor AWS (via SSH):
-3. **Acesse o servidor e a pasta do app:**
-   ```bash
-   ssh ubuntu@54.163.41.195
-   cd ~/app
-   ```
+#### Frontend Web Application:
 
-4. **Atualize a tag no `.env`:**
-   Abra o `.env` (`nano .env`) e altere:
-   ```dotenv
-   PAYFLOW_APP_IMAGE=albertomjunior/payflow-app:v2
-   ```
+```bash
+docker build --platform linux/amd64 -t <dockerhub-username>/payflow-frontend:<tag> ./frontend
+docker push <dockerhub-username>/payflow-frontend:<tag>
+```
 
-5. **Baixe e reinicie apenas o container da API:**
+---
+
+### 2. Server Deployment
+
+On the remote host (`~/app`):
+
+#### Initial Setup
+
+Ensure configuration directories and files are present on the host:
+
+```bash
+scp -r docker-compose.yml postgres-init keycloak ubuntu@<server-ip>:~/app/
+```
+
+Create and secure the environment configuration:
+
+```bash
+nano .env
+chmod 600 .env
+```
+
+#### Environment Variables Reference (`.env`)
+
+```dotenv
+# Image Tags
+PAYFLOW_APP_IMAGE=<dockerhub-username>/payflow-app:v1
+PAYFLOW_FRONTEND_IMAGE=<dockerhub-username>/payflow-frontend:v1
+
+# PostgreSQL
+POSTGRES_DB=payflow_db
+POSTGRES_USER=payflowAdmin
+POSTGRES_PASSWORD=<strong-database-password>
+
+# Keycloak Administration
+KEYCLOAK_ADMIN_USER=admin
+KEYCLOAK_ADMIN_PASSWORD=<strong-admin-password>
+
+# OAuth2 Client Credentials
+PAYFLOW_BFF_CLIENT_SECRET=E1bdIx6iyWOLANmD6l6X96Ql5mFQiNWc
+PAYFLOW_API_CLIENT_ID=payflow-api
+PAYFLOW_API_CLIENT_SECRET=<client-secret>
+```
+
+#### Pull and Run
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+---
+
+### 3. Continuous Delivery & Service Updates
+
+To deploy an update without restarting unaffected infrastructure (e.g. updating the backend without touching Keycloak or PostgreSQL):
+
+#### Updating the Backend:
+
+1. Update `PAYFLOW_APP_IMAGE` in `.env` to the new tag (e.g., `:v2`).
+2. Pull the image and recreate the container:
    ```bash
    docker compose pull payment-system-app
    docker compose up -d payment-system-app
    ```
-   *(O banco, redis e keycloak continuam rodando sem interrupção).*
 
-6. **Verifique os logs de inicialização:**
-   ```bash
-   docker compose logs -f payment-system-app
-   ```
+#### Updating the Frontend:
 
----
-
-### 🎨 Cenário B: Você alterou o Frontend (React / Vite)
-
-#### No seu computador (Laptop):
-1. **Gere a nova versão da imagem do Frontend:**
-   ```bash
-   docker build --platform linux/amd64 -t albertomjunior/payflow-frontend:v2 ./frontend
-   ```
-
-2. **Envie para o Docker Hub:**
-   ```bash
-   docker push albertomjunior/payflow-frontend:v2
-   ```
-
-#### No servidor AWS (via SSH):
-3. **Acesse o servidor:**
-   ```bash
-   ssh ubuntu@54.163.41.195
-   cd ~/app
-   ```
-
-4. **Atualize a tag no `.env`:**
-   Abra o `.env` (`nano .env`) e altere:
-   ```dotenv
-   PAYFLOW_FRONTEND_IMAGE=albertomjunior/payflow-frontend:v2
-   ```
-
-5. **Baixe e reinicie apenas o container do frontend:**
+1. Update `PAYFLOW_FRONTEND_IMAGE` in `.env` to the new tag (e.g., `:v2`).
+2. Pull the image and recreate the container:
    ```bash
    docker compose pull frontend
    docker compose up -d frontend
@@ -113,55 +160,37 @@ Sempre que você fizer alterações no código e quiser subir uma nova versão p
 
 ---
 
-### ⚙️ Cenário C: Você alterou o `docker-compose.yml` ou scripts de configuração
+## Rollback Procedure
 
-Se você adicionou novas variáveis, portas ou alterou arquivos de configuração (como `keycloak/` ou `postgres-init/`):
+To roll back a faulty deployment:
 
-1. **No seu laptop, sincronize os arquivos com a AWS:**
-   ```bash
-   scp -r docker-compose.yml postgres-init keycloak ubuntu@54.163.41.195:~/app/
+1. Edit `.env` and revert the image tag to the last known stable version:
+   ```dotenv
+   PAYFLOW_APP_IMAGE=<dockerhub-username>/payflow-app:<stable-tag>
    ```
-
-2. **No servidor AWS, aplique as mudanças:**
-   ```bash
-   docker compose up -d
-   ```
-
----
-
-## ⏪ 3. Procedimento de Rollback (Deu problema? Como voltar atrás)
-
-Se a versão nova (`v2`) apresentar algum bug grave em produção:
-
-1. Acesse o servidor: `ssh ubuntu@54.163.41.195 && cd ~/app`
-2. No `.env`, mude a tag de volta para a versão estável anterior (ex: `v1`).
-3. Rode o comando de subida:
+2. Re-apply the target container:
    ```bash
    docker compose up -d payment-system-app
-   # ou
-   docker compose up -d frontend
    ```
-Em menos de 5 segundos a aplicação volta para a versão anterior estável sem perder dados.
+
+The container will be recreated with the previous image version in seconds.
 
 ---
 
-## 🛠️ 4. Comandos Úteis de Manutenção no Servidor
+## Operations & Maintenance
 
 ```bash
-# Ver status de todos os containers
+# Check container status
 docker compose ps
 
-# Ver consumo de Memória e CPU em tempo real
-docker stats
-
-# Ver logs de um serviço específico
+# Follow live container logs
 docker compose logs -f payment-system-app
 docker compose logs -f frontend
 docker compose logs -f keycloak
 
-# Liberar espaço em disco (apagar imagens antigas e não utilizadas)
-docker system prune -f
+# Real-time resource usage (CPU / Memory)
+docker stats
 
-# Reiniciar todos os serviços
-docker compose restart
+# Clean up untagged images and build cache
+docker system prune -f
 ```
